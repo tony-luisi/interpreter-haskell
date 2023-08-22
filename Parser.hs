@@ -23,28 +23,21 @@ parseExpression :: [Token] -> (Expression, [Token])
 parseExpression tokens =
   let (term, rest) = parseTerm tokens
    in case rest of
-        (OperatorToken op : rest1) -> parseWithOperator op term rest1
+        (OperatorToken op : rest1)
+          | op `elem` ["+", "-"] ->
+              let (expression, rest2) = parseExpression rest1
+               in (Operator op term expression, rest2)
         _ -> (term, rest)
-
--- parse with an operator
-parseWithOperator :: String -> Expression -> [Token] -> (Expression, [Token])
-parseWithOperator "+" term rest1 =
-  let (expression, rest2) = parseExpression rest1
-   in (Operator "+" term expression, rest2)
-parseWithOperator "-" term rest1 =
-  let (expression, rest2) = parseExpression rest1
-   in (Operator "-" term expression, rest2)
 
 -- parse a term
 parseTerm :: [Token] -> (Expression, [Token])
 parseTerm tokens = do
   let (factor, rest) = parseFactor tokens
   case rest of
-    (OperatorToken op : rest1) -> do
-      let (term, rest3) = parseTerm rest1
-       in case op of
-            "*" -> (Operator "*" factor term, rest3)
-            _ -> (factor, rest)
+    (OperatorToken op : rest1)
+      | op `elem` ["*", "/"] ->
+          let (term, rest2) = parseTerm rest1
+           in (Operator op factor term, rest2)
     _ -> (factor, rest)
 
 -- parse a factor

@@ -18,23 +18,22 @@ parse tokens =
 filterEmptyExpression :: Expression -> Expression
 filterEmptyExpression (Sequence x) = Sequence (filter (/= EmptyExpression) x)
 
--- | handleOperator to handle operator expressions
-handleOperator :: String -> (Expression, [Token]) -> (Expression, Expression) -> (Expression, [Token])
-handleOperator "+" (_, rest) (term, expression) = (Operator "+" term expression, rest)
-handleOperator "-" (_, rest) (term, expression) = (Operator "-" term expression, rest)
-
 -- parse an expression
 parseExpression :: [Token] -> (Expression, [Token])
 parseExpression tokens =
   let (term, rest) = parseTerm tokens
    in case rest of
-        (OperatorToken op : rest1) -> do
-          let (expression, rest2) = parseExpression rest1
-           in case op of
-                "+" -> (Operator "+" term expression, rest2)
-                "-" -> (Operator "-" term expression, rest2)
-                _ -> error "Invalid operator"
+        (OperatorToken op : rest1) -> parseWithOperator op term rest1
         _ -> (term, rest)
+
+-- parse with an operator
+parseWithOperator :: String -> Expression -> [Token] -> (Expression, [Token])
+parseWithOperator "+" term rest1 =
+  let (expression, rest2) = parseExpression rest1
+   in (Operator "+" term expression, rest2)
+parseWithOperator "-" term rest1 =
+  let (expression, rest2) = parseExpression rest1
+   in (Operator "-" term expression, rest2)
 
 -- parse a term
 parseTerm :: [Token] -> (Expression, [Token])
